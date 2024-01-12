@@ -1,7 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData
-from sqlalchemy.orm import validates
 from sqlalchemy.ext.associationproxy import association_proxy
+from sqlalchemy.orm import validates
 from sqlalchemy_serializer import SerializerMixin
 
 convention = {
@@ -26,8 +26,12 @@ class Planet(db.Model, SerializerMixin):
     nearest_star = db.Column(db.String)
 
     # Add relationship
-
+    
+    missions = db.relationship("Mission", back_populates="planet", cascade="all, delete-orphan")
+    scientists = association_proxy('missions', 'scientist')
+    
     # Add serialization rules
+    serialize_rules = ("-missions",)
 
 
 class Scientist(db.Model, SerializerMixin):
@@ -38,23 +42,43 @@ class Scientist(db.Model, SerializerMixin):
     field_of_study = db.Column(db.String)
 
     # Add relationship
+    
+    missions = db.relationship("Mission", back_populates="scientist", cascade="all, delete-orphan")
+    planets = association_proxy('missions', 'planet')
 
     # Add serialization rules
+    serialize_rules = ("-missions",)
 
     # Add validation
 
+    @validates('name', 'field_of_study')
+    def validates_presence(self, key, value):
+        if not value:
+            raise ValueError(f"Scientists must have a {key}.")
+        return value
 
 class Mission(db.Model, SerializerMixin):
     __tablename__ = 'missions'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
-
+    planet_id = db.Column(db.Integer, db.ForeignKey('planets.id'))
+    scientist_id = db.Column(db.Integer, db.ForeignKey('scientists.id'))
     # Add relationships
+    
+    planet = db.relationship("Planet", back_populates="missions")
+    scientist = db.relationship("Scientist", back_populates="missions")
 
     # Add serialization rules
+    serialize_rules = ("-scientist","-planet")
 
     # Add validation
+    
+    @validates('name', 'scientist_id', 'planet_id')
+    def validates_presence(self, key, value):
+        if not value:
+            raise ValueError(f"Missions must have a {key}.")
+        return value
 
 
 # add any models you may need.
