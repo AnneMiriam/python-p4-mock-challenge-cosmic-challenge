@@ -1,18 +1,22 @@
 #!/usr/bin/env python3
 
-import os
+from os import environ, path
 
-from flask import Flask, make_response, request
+from dotenv import load_dotenv
+from flask import Flask, make_response, request, session
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
 from models import Mission, Planet, Scientist, db
 
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-DATABASE = os.environ.get(
-    "DB_URI", f"sqlite:///{os.path.join(BASE_DIR, 'app.db')}")
+BASE_DIR = path.abspath(path.dirname(__file__))
+DATABASE = environ.get(
+    "DB_URI", f"sqlite:///{path.join(BASE_DIR, 'app.db')}")
+
+load_dotenv('.env')
 
 
 app = Flask(__name__)
+app.secret_key = environ.get('SECRET_KEY')
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.json.compact = False
@@ -26,6 +30,40 @@ api = Api(app)
 @app.route('/')
 def home():
     return ''
+
+@app.route('/set_red')
+def set_red():
+    res = make_response({"message": "cookie color set to red"}, 200)
+    res.set_cookie("color", "red")
+    return res
+
+@app.route('/set_num/<int:num>')
+def set_num(num):
+    res = make_response({"message": f"num set to {num}"}, 200)
+    res.set_cookie("num", str(num))
+    return res
+
+@app.route('/current_color')
+def current_color():
+    return make_response({"color": request.cookies.get("color")}, 200)
+
+
+@app.route('/sign_in', methods=("POST","GET"))
+def sign_in():
+    # data = request.get_json()
+    #user = User.query.filter_by(username=data.get('username'))
+    
+    # check if password from data matches password of user
+    
+    # res = make_response({"message": f"signed in as user {user.id}"}, 200)
+    
+    session["user_id"] = 1
+    return make_response({"message": f"signed in as user {session.get('user_id')}"}, 200)
+
+@app.route('/check_session')
+def check_session():
+    return make_response({"user_id": session.get("user_id")}, 200)
+
 
 class Scientists(Resource):
     def get(self):
