@@ -1,68 +1,57 @@
 #!/usr/bin/env python3
 
-from os import environ, path
+from config import app, db, api
+from flask import make_response, request, session
 
-from dotenv import load_dotenv
-from flask import Flask, make_response, request, session
-from flask_migrate import Migrate
-from flask_restful import Api, Resource
-from models import Mission, Planet, Scientist, db
-
-BASE_DIR = path.abspath(path.dirname(__file__))
-DATABASE = environ.get(
-    "DB_URI", f"sqlite:///{path.join(BASE_DIR, 'app.db')}")
-
-load_dotenv('.env')
-
-
-app = Flask(__name__)
-app.secret_key = environ.get('SECRET_KEY')
-app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.json.compact = False
-
-migrate = Migrate(app, db)
-
-db.init_app(app)
-
-api = Api(app)
+from flask_restful import Resource
+from models import Mission, Planet, Scientist, User
+from sqlalchemy.exc import IntegrityError
 
 @app.route('/')
 def home():
     return ''
 
-@app.route('/set_red')
-def set_red():
-    res = make_response({"message": "cookie color set to red"}, 200)
-    res.set_cookie("color", "red")
-    return res
+@app.route('/sign_up', methods=("POST",))
+def sign_up():
+    data = request.get_json()
+    
+    try:
+        user = User(username=data.get("username"), password_hash=data.get("password"))
+        db.session.add(user)
+        db.session.commit()
+        session["user_id"] = user.id
+        
+        return make_response(user.to_dict(), 201)
+        
+    except ValueError as e:
+        return make_response({"error": e.__str__()}, 400)
+    except IntegrityError:
+        return make_response({"error": "Database constraint error"}, 400)
 
-@app.route('/set_num/<int:num>')
-def set_num(num):
-    res = make_response({"message": f"num set to {num}"}, 200)
-    res.set_cookie("num", str(num))
-    return res
-
-@app.route('/current_color')
-def current_color():
-    return make_response({"color": request.cookies.get("color")}, 200)
-
-
-@app.route('/sign_in', methods=("POST","GET"))
+@app.route('/sign_in', methods=("POST",))
 def sign_in():
-    # data = request.get_json()
-    #user = User.query.filter_by(username=data.get('username'))
-    
-    # check if password from data matches password of user
-    
-    # res = make_response({"message": f"signed in as user {user.id}"}, 200)
-    
-    session["user_id"] = 1
-    return make_response({"message": f"signed in as user {session.get('user_id')}"}, 200)
+    data = request.get_json()
+    user = User.query.filter_by(username=data.get('username')).first()
+    if user:
+        if user.authenticate(data.get("password")):
+            session["user_id"] = user.id
+            return make_response(user.to_dict(), 200)
+    session.clear()
+    return make_response({"error": "Incorrect username or password"}, 401)
+
+
+@app.route('/sign_out', methods=("DELETE",))
+def sign_out():
+    session.clear()
+    return make_response({}, 204)
 
 @app.route('/check_session')
 def check_session():
-    return make_response({"user_id": session.get("user_id")}, 200)
+    user = User.query.get(session.get("user_id"))
+    if user:
+        return make_response(user.to_dict(), 200)
+    else:
+        return make_response({}, 401)
 
 
 class Scientists(Resource):
