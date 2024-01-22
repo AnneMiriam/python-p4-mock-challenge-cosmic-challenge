@@ -1,10 +1,8 @@
-
-import React from 'react'
-import {Routes, Route} from 'react-router-dom'
-import Header from './components/Header'
-import Dashboard from './components/Dashboard'
-import ScientistDetail from './components/ScientistDetail'
-// import './App.css';
+import React from "react";
+import { Route, Routes } from "react-router-dom";
+import Dashboard from "./components/Dashboard";
+import Header from "./components/Header";
+import ScientistDetail from "./components/ScientistDetail";
 
 function App() {
   return (
@@ -12,13 +10,10 @@ function App() {
       <Header />
       <main>
         <Routes>
-          <Route index element={<Dashboard/>} />
-          <Route path="/scientists/:id/*" element={<ScientistDetail/>} />
+          <Route index element={<Dashboard />} />
+          <Route path="/scientists/:id/*" element={<ScientistDetail />} />
         </Routes>
       </main>
-      <footer>
-      
-      </footer>
     </div>
   );
 }
