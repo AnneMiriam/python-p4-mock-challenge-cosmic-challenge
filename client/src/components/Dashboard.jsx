@@ -1,7 +1,6 @@
-import React, { Suspense, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import ScientistCard from "./ScientistCard";
 import ScientistForm from "./ScientistForm";
-import GridLoader from "react-spinners/GridLoader";
 
 function Dashboard() {
   const [scientists, setScientists] = useState([]);
@@ -29,7 +28,7 @@ function Dashboard() {
     });
   }
 
-  let sciCards = scientists.map((sci) => (
+  const sciCards = scientists.map((sci) => (
     <ScientistCard
       key={sci.id}
       scientist={sci}
@@ -39,10 +38,8 @@ function Dashboard() {
 
   return (
     <>
-      <Suspense fallback={<GridLoader />}>
-        <h1>Scientists</h1>
-        <div className="sciList">{sciCards}</div>
-      </Suspense>
+      <h1>Scientists</h1>
+      <div className="sciList">{sciCards}</div>
       <hr />
       <ScientistForm onScientistRequest={handleAddScientist} edit={false} />
     </>

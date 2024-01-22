@@ -19,7 +19,12 @@ function Header() {
   };
   return (
     <nav>
-      <img onClick={handleLogoClick} src={rocket} alt="" />
+      <img
+        onClick={handleLogoClick}
+        src={rocket}
+        alt=""
+        onKeyDown={handleLogoClick}
+      />
       <span>
         <h1>
           <Link to="/">Cosmic Travel Agency</Link>

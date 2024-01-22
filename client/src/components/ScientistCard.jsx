@@ -8,7 +8,7 @@ function ScientistCard({ scientist: { id, name }, onDelete }) {
       <Link to={`/scientists/${id}`}>View Missions</Link>
       <span>
         {" "}
-        <button onClick={() => onDelete(id)}>
+        <button type="button" onClick={() => onDelete(id)}>
           <strong>X</strong>
         </button>
       </span>

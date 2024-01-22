@@ -27,7 +27,7 @@ function ScientistDetail() {
 
   useEffect(() => {
     fetchScientist().catch(console.error);
-  }, [id, fetchScientist]);
+  }, [fetchScientist]);
 
   function handleAddMission(newMission) {
     setScientist({
@@ -57,7 +57,10 @@ function ScientistDetail() {
       <h2>Scientist Profile:</h2>
       <h3>{scientist.name}</h3>
       <h4>Field of Study: {scientist.field_of_study}</h4>
-      <button onClick={() => setShowEdit((showEdit) => !showEdit)}>
+      <button
+        type="button"
+        onClick={() => setShowEdit((showEdit) => !showEdit)}
+      >
         Edit Scientist
       </button>
       {showEdit && (
